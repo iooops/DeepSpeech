@@ -489,7 +489,7 @@ def BiRNN(batch_x, seq_length, dropout, reuse=False, batch_size=None, n_steps=-1
     # to the slightly more useful shape [n_steps, batch_size, n_hidden_6].
     # Note, that this differs from the input in that it is time-major.
     layer_6 = tf.reshape(layer_6, [n_steps, batch_size, n_hidden_6], name="raw_logits")
-    layers['logits'] = layer_6
+    layers['raw_logits'] = layer_6
 
     # Output shape: [n_steps, batch_size, n_hidden_6]
     return layer_6, layers
@@ -1840,9 +1840,9 @@ def create_inference_graph(batch_size=1, n_steps=16, use_new_decoder=False, tfli
                 'outputs': logits,
                 'new_state_c': new_state_c,
                 'new_state_h': new_state_h,
-            }
+            },
+            layers
         )
-
 
 def export():
     r'''
@@ -1855,7 +1855,7 @@ def export():
         tf.reset_default_graph()
         session = tf.Session(config=session_config)
 
-        inputs, outputs = create_inference_graph(batch_size=1, n_steps=FLAGS.n_steps, tflite=FLAGS.export_tflite)
+        inputs, outputs, _ = create_inference_graph(batch_size=1, n_steps=FLAGS.n_steps, tflite=FLAGS.export_tflite)
         input_names = ",".join(tensor.op.name for tensor in inputs.values())
         output_names_tensors = [ tensor.op.name for tensor in outputs.values() if isinstance(tensor, Tensor) ]
         output_names_ops = [ tensor.name for tensor in outputs.values() if isinstance(tensor, Operation) ]
