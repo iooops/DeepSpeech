@@ -97,6 +97,10 @@ def main(_):
     global alphabet
     alphabet = Alphabet(FLAGS.alphabet_config_path)
 
+    scorer = Scorer(FLAGS.lm_weight, FLAGS.valid_word_count_weight,
+                    FLAGS.lm_binary_path, FLAGS.lm_trie_path,
+                    alphabet)
+
     # sort examples by length, improves packing of batches and timesteps
     test_data = preprocess(
         FLAGS.test_files.split(','),
@@ -190,7 +194,7 @@ def main(_):
         # Second pass, decode logits and compute WER and edit distance metrics
         for logits, batch in bar(zip(logitses, split_data(test_data, FLAGS.test_batch_size))):
             seq_lengths = batch['features_len'].values.astype(np.int32)
-            decoded = ctc_beam_search_decoder_batch(logits, seq_lengths, alphabet, FLAGS.beam_width, 8, 1.0, 40, None)
+            decoded = ctc_beam_search_decoder_batch(logits, seq_lengths, alphabet, FLAGS.beam_width, 8, 1.0, 40, scorer)
 
             ground_truths.extend(alphabet.decode(l) for l in batch['transcript'])
             predictions.extend(d[0][1] for d in decoded)

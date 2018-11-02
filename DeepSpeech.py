@@ -1823,7 +1823,8 @@ def create_inference_graph(batch_size=1, n_steps=16, use_new_decoder=False, tfli
             {
                 'outputs': logits,
                 'initialize_state': initialize_state,
-            }
+            },
+            layers
         )
     else:
         logits = tf.identity(logits, name='logits')
@@ -1947,7 +1948,7 @@ def export():
 
 def do_single_file_inference(input_file_path):
     with tf.Session(config=session_config) as session:
-        inputs, outputs = create_inference_graph(batch_size=1, use_new_decoder=True)
+        inputs, outputs, _ = create_inference_graph(batch_size=1, use_new_decoder=True)
 
         # Create a saver using variables from the above newly created graph
         mapping = {v.op.name: v for v in tf.global_variables() if not v.op.name.startswith('previous_state_')}
